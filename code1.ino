@@ -1,9 +1,12 @@
 #include <BLEDevice.h>
 #include <BLEUtils.h>
 #include <BLEServer.h>
-#include <Arduino.h>  
-#include <vector>
+#include <Arduino.h>
 #include <string>
+#include <iostream>
+#include <map>
+#include <sstream>
+#include <iomanip>
 
 #define SERVICE_UUID        "6E400001-B5A3-F393-E0A9-E50E24DCCA9E"
 #define CHARACTERISTIC_UUID "6E400002-B5A3-F393-E0A9-E50E24DCCA9E"
@@ -38,77 +41,121 @@ class MyCallbacks : public BLECharacteristicCallbacks {
 
         // Split the value by spaces
         int startIdx = 0;
-        int endIdx = value.find(' ');
-        std::string command = value.substr(startIdx, endIdx - startIdx);
+        int spaceIdx = value.find(' ');
+        std::string command = value.substr(startIdx, spaceIdx - startIdx);
 
-        std::vector<std::string> relays;
-
-        do {
-            // Find the next space character
-            startIdx = endIdx + 1;
-            endIdx = value.find(' ', startIdx);
-
-            // Extract each word
-            std::string word = value.substr(startIdx, endIdx - startIdx);
-
-            relays.push_back(word);
-        } while (endIdx != -1);
         if (command == "ON"){
+           std::string relayID = value.substr(spaceIdx + 1);
+           
           // switch on the relays
-          for (const auto& relayID : relays) {
-              if (relayID == "Relay1"){
-                digitalWrite(RelayPin_1, HIGH);
-                RelayStatus_1 = true;
-              }
-              else if (relayID == "Relay2"){
-                digitalWrite(RelayPin_2, HIGH);
-                RelayStatus_2 = true;
-              }
-              else if (relayID == "Relay3"){
-                digitalWrite(RelayPin_3, HIGH);
-                RelayStatus_3 = true;
-              }
-             }
+          if (relayID == "1"){
+            digitalWrite(RelayPin_1, HIGH);
+            RelayStatus_1 = true;
+          }
+          else if (relayID == "2"){
+            digitalWrite(RelayPin_2, HIGH);
+            RelayStatus_2 = true;
+          }
+          else if (relayID == "3"){
+            digitalWrite(RelayPin_3, HIGH);
+            RelayStatus_3 = true;
+          }
+          else if (relayID == "4"){
+            digitalWrite(RelayPin_4, HIGH);
+            RelayStatus_4 = true;
+          }
+          else if (relayID == "5"){
+            digitalWrite(RelayPin_5, HIGH);
+            RelayStatus_5 = true;
+          }  
+            float sensorValue = readSensor();
+          
+          // Construct JSON message
+          std::stringstream jsonMessage;
+          jsonMessage << "{";
+          jsonMessage << "\"command\": \"" << command << "\", ";
+          jsonMessage << "\"relay_status\": {";
+          jsonMessage << "\"Relay1\": \"" << (RelayStatus_1 ? "on" : "off") << "\", ";
+          jsonMessage << "\"Relay2\": \"" << (RelayStatus_2 ? "on" : "off") << "\", ";
+          jsonMessage << "\"Relay3\": \"" << (RelayStatus_3 ? "on" : "off") << "\", ";
+          jsonMessage << "\"Relay4\": \"" << (RelayStatus_4 ? "on" : "off") << "\", ";
+          jsonMessage << "\"Relay5\": \"" << (RelayStatus_5 ? "on" : "off") << "\"";
+          jsonMessage << "}, ";
+          jsonMessage << "\"sensor_value\": " << std::fixed << std::setprecision(2) << sensorValue;
+          jsonMessage << "}";
+
+          // Send the status message
+          pCharacteristic->setValue(jsonMessage.str());
+          pCharacteristic->notify();          
         }
   
         else if (command == "OFF"){
+          std::string relayID = value.substr(spaceIdx + 1);
           // switch off the relays
-          for (const auto& relayID : relays) {
-              if (relayID == "Relay1"){
-                digitalWrite(RelayPin_1, LOW);
-                RelayStatus_1 = false;
-              }
-              else if (relayID == "Relay2"){
-                digitalWrite(RelayPin_2, LOW);
-                RelayStatus_2 = false;
-              }
-              else if (relayID == "Relay3"){
-                digitalWrite(RelayPin_3, LOW);
-                RelayStatus_3 = false;
-              }
-             }
+          if (relayID == "1"){
+            digitalWrite(RelayPin_1, LOW);
+            RelayStatus_1 = false;
+          }
+          else if (relayID == "2"){
+            digitalWrite(RelayPin_2, LOW);
+            RelayStatus_2 = false;
+          }
+          else if (relayID == "3"){
+            digitalWrite(RelayPin_3, LOW);
+            RelayStatus_3 = false;
+          }
+          else if (relayID == "4"){
+            digitalWrite(RelayPin_4, LOW);
+            RelayStatus_4 = false;
+          }
+          else if (relayID == "5"){
+            digitalWrite(RelayPin_5, LOW);
+            RelayStatus_5 = false;
+          }
+            float sensorValue = readSensor();
+          
+          // Construct JSON message
+          std::stringstream jsonMessage;
+          jsonMessage << "{";
+          jsonMessage << "\"command\": \"" << command << "\", ";
+          jsonMessage << "\"relay_status\": {";
+          jsonMessage << "\"Relay1\": \"" << (RelayStatus_1 ? "on" : "off") << "\", ";
+          jsonMessage << "\"Relay2\": \"" << (RelayStatus_2 ? "on" : "off") << "\", ";
+          jsonMessage << "\"Relay3\": \"" << (RelayStatus_3 ? "on" : "off") << "\", ";
+          jsonMessage << "\"Relay4\": \"" << (RelayStatus_4 ? "on" : "off") << "\", ";
+          jsonMessage << "\"Relay5\": \"" << (RelayStatus_5 ? "on" : "off") << "\"";
+          jsonMessage << "}, ";
+          jsonMessage << "\"sensor_value\": " << std::fixed << std::setprecision(2) << sensorValue;
+          jsonMessage << "}";
+
+          // Send the status message
+          pCharacteristic->setValue(jsonMessage.str());
+          pCharacteristic->notify();
         }
+
         else if (command == "Status") {
           float sensorValue = readSensor();
           
-          // Construct message with relay status
-          std::string statusMessage = "Relay Status: ";
-          statusMessage += "Relay1 ";
-          statusMessage += (RelayStatus_1 ? "on " : "off ");
-          statusMessage += "Relay2 ";
-          statusMessage += (RelayStatus_2 ? "on " : "off ");
-          statusMessage += "Relay3 ";
-          statusMessage += (RelayStatus_3 ? "on " : "off ");
-          statusMessage += "Relay4 ";
-          statusMessage += (RelayStatus_4 ? "on " : "off ");
-          statusMessage += "Relay5 ";
-          statusMessage += (RelayStatus_5 ? "on " : "off ");
-
-          statusMessage += "SensorValue: ";
-          statusMessage += std::to_string(sensorValue);
+          // Construct JSON message
+          std::stringstream jsonMessage;
+          jsonMessage << "{";
+          jsonMessage << "\"command\": \"" << command << "\", ";
+          jsonMessage << "\"relay_status\": {";
+          jsonMessage << "\"Relay1\": \"" << (RelayStatus_1 ? "on" : "off") << "\", ";
+          jsonMessage << "\"Relay2\": \"" << (RelayStatus_2 ? "on" : "off") << "\", ";
+          jsonMessage << "\"Relay3\": \"" << (RelayStatus_3 ? "on" : "off") << "\", ";
+          jsonMessage << "\"Relay4\": \"" << (RelayStatus_4 ? "on" : "off") << "\", ";
+          jsonMessage << "\"Relay5\": \"" << (RelayStatus_5 ? "on" : "off") << "\"";
+          jsonMessage << "}, ";
+          jsonMessage << "\"sensor_value\": " << std::fixed << std::setprecision(2) << sensorValue;
+          jsonMessage << "}";
 
           // Send the status message
-          pCharacteristic->setValue(statusMessage);
+          pCharacteristic->setValue(jsonMessage.str());
+          pCharacteristic->notify();
+        }
+        else {
+          pCharacteristic->setValue("Unknown command");
           pCharacteristic->notify();
         }  
     }
@@ -159,3 +206,4 @@ void loop() {
     // Your main code can go here if needed
     delay(2000);
 }
+
