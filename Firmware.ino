@@ -1,6 +1,14 @@
+//================================================================
+// FILE NAME          : Firmware.c
+// COPYRIGHTS         : ZERO TECHNOLOGIES
+// DISCRPTION         : hitech-controller-firmware
+// HARDWARE           : ESP 32 
+//================================================================
+
 #include <BLEDevice.h>
 #include <BLEUtils.h>
 #include <BLEServer.h>
+#include <ArduinoJson.h>
 #include <Arduino.h>
 #include <string>
 #include <iostream>
@@ -10,6 +18,8 @@
 
 #define SERVICE_UUID        "6E400001-B5A3-F393-E0A9-E50E24DCCA9E"
 #define CHARACTERISTIC_UUID "6E400002-B5A3-F393-E0A9-E50E24DCCA9E"
+
+// ESP 32 GPIOPins for controlling relays and reading sensor value
 #define RelayPin_1            18
 #define RelayPin_2            19
 #define RelayPin_3            21
@@ -17,11 +27,24 @@
 #define RelayPin_5            23
 #define sensorPin             35
 
+// Tracking relay status
 bool RelayStatus_1 = false;
 bool RelayStatus_2 = false;
 bool RelayStatus_3 = false;
 bool RelayStatus_4 = false;
 bool RelayStatus_5 = false;
+
+// Define the connected devices to each relay and sensor.
+//================================================================
+std::string device1 = "fan";
+std::string device2 = "kitchen light";
+std::string device3 = "wash room light";
+std::string device4 = "air conditioner";
+std::string device5 = "home theatre";
+
+std::string sensor = "whater level";
+
+//================================================================
 
 BLEServer *pServer = nullptr;
 BLECharacteristic *pCharacteristic = nullptr;
@@ -134,6 +157,7 @@ class MyCallbacks : public BLECharacteristicCallbacks {
         }
 
         else if (command == "Status") {
+            // send the status about all the relays and sensor values.
             float sensorValue = readSensor();
           
             // Construct JSON message
@@ -151,6 +175,23 @@ class MyCallbacks : public BLECharacteristicCallbacks {
             jsonMessage << "}";
 
             // Send the status message
+            pCharacteristic->setValue(jsonMessage.str());
+            pCharacteristic->notify();
+        }
+
+        else if (command == "Devices"){
+            // Send the connected devices for each sensor.
+            std::stringstream jsonMessage;
+            jsonMessage << "{";
+            jsonMessage << "\"Relay1\": \"" << device1 << "\", ";
+            jsonMessage << "\"Relay2\": \"" << device2 << "\", ";
+            jsonMessage << "\"Relay3\": \"" << device3 << "\", ";
+            jsonMessage << "\"Relay4\": \"" << device4 << "\", ";
+            jsonMessage << "\"Relay5\": \"" << device5 << "\", ";
+            jsonMessage << "\"Sensor1\": \"" << sensor1 << "\"";
+            jsonMessage << "}";
+
+            // Send the JSON message
             pCharacteristic->setValue(jsonMessage.str());
             pCharacteristic->notify();
         }
