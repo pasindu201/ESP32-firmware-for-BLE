@@ -19,30 +19,26 @@
 #define SERVICE_UUID        "6E400001-B5A3-F393-E0A9-E50E24DCCA9E"
 #define CHARACTERISTIC_UUID "6E400002-B5A3-F393-E0A9-E50E24DCCA9E"
 
-// ESP 32 GPIOPins for controlling relays and reading sensor value
-#define RelayPin_1            18
-#define RelayPin_2            19
-#define RelayPin_3            21
-#define RelayPin_4            22
-#define RelayPin_5            23
-#define sensorPin             35
+// ESP 32 GPIOPins for controlling relays and reading sensor value.
+#define Relay_1                1
+#define Relay_2                2
+#define Relay_3                3
+#define Relay_4                4
+#define Relay_5                5
 
-// Tracking relay status
-bool RelayStatus_1 = false;
-bool RelayStatus_2 = false;
-bool RelayStatus_3 = false;
-bool RelayStatus_4 = false;
-bool RelayStatus_5 = false;
+#define Sensor_1              32
+#define Sensor_2              33
 
 // Define the connected devices to each relay and sensor.
 //================================================================
-std::string device1 = "fan";
-std::string device2 = "kitchen light";
-std::string device3 = "wash room light";
-std::string device4 = "air conditioner";
-std::string device5 = "home theatre";
+std::string relays[] = {"Exhaust_fan", "light_1", "light_2"};
+std::string sensors[] = {"Water_level", "temperature"};
 
-std::string sensor = "whater level";
+int number_of_relays = sizeof(relays) / sizeof(relays[0]);
+int number_of_sensors = sizeof(sensors) / sizeof(sensors[0]); 
+
+// Tracking relay status
+bool relay_status[number_of_relays] = {false};
 
 //================================================================
 
@@ -98,13 +94,14 @@ class MyCallbacks : public BLECharacteristicCallbacks {
             jsonMessage << "{";
             jsonMessage << "\"command\": \"" << command << "\", ";
             jsonMessage << "\"relay_status\": {";
-            jsonMessage << "\"Relay1\": \"" << (RelayStatus_1 ? "on" : "off") << "\", ";
-            jsonMessage << "\"Relay2\": \"" << (RelayStatus_2 ? "on" : "off") << "\", ";
-            jsonMessage << "\"Relay3\": \"" << (RelayStatus_3 ? "on" : "off") << "\", ";
-            jsonMessage << "\"Relay4\": \"" << (RelayStatus_4 ? "on" : "off") << "\", ";
-            jsonMessage << "\"Relay5\": \"" << (RelayStatus_5 ? "on" : "off") << "\"";
+            for (int relay_id=0, relay_id<number_of_relays, relay_id++) {
+                jsonMessage << "\"Relay" + std::to_string(relay_id) + "\"": "{"id\":" + std::to_string(relay_id) +", \"type:\"" + relays[relay_id] + "," + "\"status\":" << (relay_status[relay_id] ? "on" : "off") << "\", ";
+            }
             jsonMessage << "}, ";
-            jsonMessage << "\"sensor_value\": " << std::fixed << std::setprecision(2) << sensorValue;
+            jsonMessage << "\"sensor_values\": {";
+            for (int sensor_id=0, sensor_id<number_of_sensors, sensor_id++) {
+                jsonMessage << "\"Sensor" + std::to_string(sensor_id) + "\"": "{"id\":" + std::to_string(sensor_id) +", \"type:\"" + sensors[sensor_id] + "," + "\"value\":" << std::to_string(sensor_values[sensor_id]) << "\", ";
+            }
             jsonMessage << "}";
 
             // Send the status message
@@ -142,13 +139,14 @@ class MyCallbacks : public BLECharacteristicCallbacks {
             jsonMessage << "{";
             jsonMessage << "\"command\": \"" << command << "\", ";
             jsonMessage << "\"relay_status\": {";
-            jsonMessage << "\"Relay1\": \"" << (RelayStatus_1 ? "on" : "off") << "\", ";
-            jsonMessage << "\"Relay2\": \"" << (RelayStatus_2 ? "on" : "off") << "\", ";
-            jsonMessage << "\"Relay3\": \"" << (RelayStatus_3 ? "on" : "off") << "\", ";
-            jsonMessage << "\"Relay4\": \"" << (RelayStatus_4 ? "on" : "off") << "\", ";
-            jsonMessage << "\"Relay5\": \"" << (RelayStatus_5 ? "on" : "off") << "\"";
+            for (int relay_id=0, relay_id<number_of_relays, relay_id++) {
+                jsonMessage << "\"Relay" + std::to_string(relay_id) + "\"": "{"id\":" + std::to_string(relay_id) +", \"type:\"" + relays[relay_id] + "," + "\"status\":" << (relay_status[relay_id] ? "on" : "off") << "\", ";
+            }
             jsonMessage << "}, ";
-            jsonMessage << "\"sensor_value\": " << std::fixed << std::setprecision(2) << sensorValue;
+            jsonMessage << "\"sensor_values\": {";
+            for (int sensor_id=0, sensor_id<number_of_sensors, sensor_id++) {
+                jsonMessage << "\"Sensor" + std::to_string(sensor_id) + "\"": "{"id\":" + std::to_string(sensor_id) +", \"type:\"" + sensors[sensor_id] + "," + "\"value\":" << std::to_string(sensor_values[sensor_id]) << "\", ";
+            }
             jsonMessage << "}";
 
             // Send the status message
@@ -165,13 +163,14 @@ class MyCallbacks : public BLECharacteristicCallbacks {
             jsonMessage << "{";
             jsonMessage << "\"command\": \"" << command << "\", ";
             jsonMessage << "\"relay_status\": {";
-            jsonMessage << "\"Relay1\": \"" << (RelayStatus_1 ? "on" : "off") << "\", ";
-            jsonMessage << "\"Relay2\": \"" << (RelayStatus_2 ? "on" : "off") << "\", ";
-            jsonMessage << "\"Relay3\": \"" << (RelayStatus_3 ? "on" : "off") << "\", ";
-            jsonMessage << "\"Relay4\": \"" << (RelayStatus_4 ? "on" : "off") << "\", ";
-            jsonMessage << "\"Relay5\": \"" << (RelayStatus_5 ? "on" : "off") << "\"";
+            for (int relay_id=0, relay_id<number_of_relays, relay_id++) {
+                jsonMessage << "\"Relay" + std::to_string(relay_id) + "\"": "{"id\":" + std::to_string(relay_id) +", \"type:\"" + relays[relay_id] + "," + "\"status\":" << (relay_status[relay_id] ? "on" : "off") << "\", ";
+            }
             jsonMessage << "}, ";
-            jsonMessage << "\"sensor_value\": " << std::fixed << std::setprecision(2) << sensorValue;
+            jsonMessage << "\"sensor_values\": {";
+            for (int sensor_id=0, sensor_id<number_of_sensors, sensor_id++) {
+                jsonMessage << "\"Sensor" + std::to_string(sensor_id) + "\"": "{"id\":" + std::to_string(sensor_id) +", \"type:\"" + sensors[sensor_id] + "," + "\"value\":" << std::to_string(sensor_values[sensor_id]) << "\", ";
+            }
             jsonMessage << "}";
 
             // Send the status message
@@ -182,14 +181,17 @@ class MyCallbacks : public BLECharacteristicCallbacks {
         else if (command == "Devices"){
             // Send the connected devices for each sensor.
             std::stringstream jsonMessage;
-            jsonMessage << "{";
-            jsonMessage << "\"Relay1\": \"" << device1 << "\", ";
-            jsonMessage << "\"Relay2\": \"" << device2 << "\", ";
-            jsonMessage << "\"Relay3\": \"" << device3 << "\", ";
-            jsonMessage << "\"Relay4\": \"" << device4 << "\", ";
-            jsonMessage << "\"Relay5\": \"" << device5 << "\", ";
-            jsonMessage << "\"Sensor1\": \"" << sensor1 << "\"";
-            jsonMessage << "}";
+            jsonMessage << "{\"Relays\": {";
+            for (int relay_id = 0, relay_id < number_of_relays, relay_id++) {
+                jsonMessage << "\"Relay" + std::to_string(relay_id) + "\":" + relays[relay_id] + ","
+            }
+            jsonMessage << "},";
+
+            jsonMessage << "{\"sensors\": {";
+            for (int sensor_id = 0, sensor_id < number_of_sensors, sensor_id++) {
+                jsonMessage << "\"Sensor" + std::to_string(sensor_id) + "\":" + sensors[sensor_id] + ","
+            }
+            jsonMessage << "}}";
 
             // Send the JSON message
             pCharacteristic->setValue(jsonMessage.str());
